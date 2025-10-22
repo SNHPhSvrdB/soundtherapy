@@ -1,7 +1,6 @@
 import { AnimatePresence } from 'motion/react';
 
 import { Category } from './category';
-import { Donate } from './donate';
 
 import type { Categories } from '@/data/types';
 
