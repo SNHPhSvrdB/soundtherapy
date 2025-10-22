@@ -11,7 +11,7 @@ import { Buttons } from '@/components/buttons';
 import { Categories } from '@/components/categories';
 import { SharedModal } from '@/components/modals/shared';
 import { Toolbar } from '@/components/toolbar';
-import { SnackbarProvider } from '@/contexts/snackbar';
+
 import { MediaControls } from '@/components/media-controls';
 
 import { sounds } from '@/data/sounds';
