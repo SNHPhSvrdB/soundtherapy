@@ -17,13 +17,8 @@ export function Donate() {
       <div className={styles.title}>
         <span>Support Me</span>
       </div>
-      <p className={styles.desc}>Help me keep Moodist ad-free.</p>
-      <SpecialButton
-        className={styles.button}
-        href="https://buymeacoffee.com/remvze"
-      >
-        Donate Today
-      </SpecialButton>
+      <p className={styles.desc}>Ad-free.</p>
+      
     </div>
   );
 }
