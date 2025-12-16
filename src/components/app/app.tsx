@@ -28,6 +28,7 @@ export function App() {
   const pause = useSoundStore(state => state.pause);
   const lock = useSoundStore(state => state.lock);
   const unlock = useSoundStore(state => state.unlock);
+  const isPlaying = useSoundStore(state => state.isPlaying);
 
   const favoriteSounds = useMemo(() => {
     // Create a Map for O(1) lookups instead of O(n) with find()
@@ -56,6 +57,40 @@ export function App() {
 
     return () => document.removeEventListener('visibilitychange', onChange);
   }, []);
+
+  // Aggressively keep Howler audio context alive for iOS
+  useEffect(() => {
+    if (!isPlaying) return;
+
+    const { ctx } = Howler;
+    if (!ctx) return;
+
+    // Monitor audio context state and resume if suspended
+    const handleStateChange = () => {
+      if (ctx.state === 'suspended' && isPlaying) {
+        ctx.resume().catch(() => {
+          // Silent fail
+        });
+      }
+    };
+
+    // Add state change listener
+    ctx.addEventListener('statechange', handleStateChange);
+
+    // Periodically check and resume audio context for iOS
+    const interval = setInterval(() => {
+      if (ctx.state === 'suspended' && isPlaying) {
+        ctx.resume().catch(() => {
+          // Silent fail
+        });
+      }
+    }, 1000); // Check every second
+
+    return () => {
+      ctx.removeEventListener('statechange', handleStateChange);
+      clearInterval(interval);
+    };
+  }, [isPlaying]);
 
   useEffect(() => {
     const unsubscribe = subscribe(FADE_OUT, (e: { duration: number }) => {

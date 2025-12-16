@@ -49,7 +49,12 @@ export const Sound = memo(forwardRef<HTMLDivElement, SoundProps>(function Sound(
   const isLoading = useLoadingStore(state => state.loaders[src]);
 
   // Only preload sound when it's visible (not hidden) to reduce memory usage
-  const sound = useSound(src, { loop: true, volume: adjustedVolume, preload: !hidden || isSelected });
+  // Force HTML5 audio mode for better iOS background playback compatibility
+  const sound = useSound(
+    src,
+    { loop: true, volume: adjustedVolume, preload: !hidden || isSelected },
+    true // Force HTML5 audio mode instead of Web Audio API for iOS compatibility
+  );
 
   useEffect(() => {
     if (locked) return;
