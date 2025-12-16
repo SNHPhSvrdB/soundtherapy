@@ -54,13 +54,29 @@ export function MediaSessionTrack() {
     if (!masterAudioSoundRef.current.paused) return;
 
     try {
+      // Ensure audio element is ready for iOS
+      if (masterAudioSoundRef.current.readyState < 2) {
+        await new Promise(resolve => {
+          if (!masterAudioSoundRef.current) return resolve(null);
+          masterAudioSoundRef.current.addEventListener('canplay', resolve, { once: true });
+          masterAudioSoundRef.current.load();
+        });
+      }
+
       await masterAudioSoundRef.current.play();
 
       navigator.mediaSession.playbackState = 'playing';
       navigator.mediaSession.setActionHandler('play', play);
       navigator.mediaSession.setActionHandler('pause', pause);
-    } catch {
-      // Do nothing
+    } catch (error) {
+      // Retry once after a short delay for iOS
+      setTimeout(async () => {
+        try {
+          await masterAudioSoundRef.current?.play();
+        } catch {
+          // Silent fail
+        }
+      }, 100);
     }
   }, [pause, play]);
 
@@ -89,6 +105,26 @@ export function MediaSessionTrack() {
     }
   }, [isGenerated, isPlaying, startMasterAudio, stopMasterAudio]);
 
+  // Handle iOS audio context interruptions
+  useEffect(() => {
+    if (!isBrowser) return;
+
+    const handleVisibilityChange = () => {
+      if (!document.hidden && isPlaying && masterAudioSoundRef.current) {
+        // Resume audio when page becomes visible on iOS
+        masterAudioSoundRef.current.play().catch(() => {
+          // Silent fail
+        });
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [isBrowser, isPlaying]);
+
   useEffect(() => {
     const masterAudioSound = masterAudioSoundRef.current;
 
@@ -101,5 +137,15 @@ export function MediaSessionTrack() {
     };
   }, []);
 
-  return <audio id="media-session-track" loop ref={masterAudioSoundRef} />;
+  return (
+    <audio
+      id="media-session-track"
+      loop
+      playsInline
+      preload="auto"
+      ref={masterAudioSoundRef}
+      // @ts-ignore - webkit-playsinline for older iOS
+      webkit-playsinline="true"
+    />
+  );
 }
