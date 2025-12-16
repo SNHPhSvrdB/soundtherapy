@@ -1,4 +1,5 @@
-import { useCallback, useEffect, forwardRef, useMemo } from 'react';
+import { useCallback, useEffect, forwardRef, useMemo, memo } from 'react';
+import { useShallow } from 'zustand/react/shallow';
 import { ImSpinner9 } from 'react-icons/im/index';
 
 import { Range } from './range';
@@ -22,20 +23,24 @@ interface SoundProps extends SoundType {
   unselectHidden: (key: string) => void;
 }
 
-export const Sound = forwardRef<HTMLDivElement, SoundProps>(function Sound(
+export const Sound = memo(forwardRef<HTMLDivElement, SoundProps>(function Sound(
   { functional, hidden, icon, id, label, selectHidden, src, unselectHidden },
   ref,
 ) {
-  const isPlaying = useSoundStore(state => state.isPlaying);
-  const play = useSoundStore(state => state.play);
-  const selectSound = useSoundStore(state => state.select);
-  const unselectSound = useSoundStore(state => state.unselect);
-  const setVolume = useSoundStore(state => state.setVolume);
-  const isSelected = useSoundStore(state => state.sounds[id].isSelected);
-  const locked = useSoundStore(state => state.locked);
+  // Combine all Zustand selectors using useShallow to reduce subscriptions from 9 to 1
+  const { isPlaying, play, selectSound, unselectSound, setVolume, isSelected, locked, volume, globalVolume } =
+    useSoundStore(useShallow(state => ({
+      isPlaying: state.isPlaying,
+      play: state.play,
+      selectSound: state.select,
+      unselectSound: state.unselect,
+      setVolume: state.setVolume,
+      isSelected: state.sounds[id].isSelected,
+      locked: state.locked,
+      volume: state.sounds[id].volume,
+      globalVolume: state.globalVolume,
+    })));
 
-  const volume = useSoundStore(state => state.sounds[id].volume);
-  const globalVolume = useSoundStore(state => state.globalVolume);
   const adjustedVolume = useMemo(
     () => volume * globalVolume,
     [volume, globalVolume],
@@ -43,7 +48,8 @@ export const Sound = forwardRef<HTMLDivElement, SoundProps>(function Sound(
 
   const isLoading = useLoadingStore(state => state.loaders[src]);
 
-  const sound = useSound(src, { loop: true, volume: adjustedVolume });
+  // Only preload sound when it's visible (not hidden) to reduce memory usage
+  const sound = useSound(src, { loop: true, volume: adjustedVolume, preload: !hidden || isSelected });
 
   useEffect(() => {
     if (locked) return;
@@ -116,4 +122,4 @@ export const Sound = forwardRef<HTMLDivElement, SoundProps>(function Sound(
       <Range id={id} label={label} />
     </div>
   );
-});
+}));

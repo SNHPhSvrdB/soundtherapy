@@ -28,7 +28,7 @@ export interface SoundState {
 
 export const createState: StateCreator<
   SoundState & SoundActions,
-  [],
+  [['zustand/immer', never]],
   [],
   SoundState
 > = (set, get) => {

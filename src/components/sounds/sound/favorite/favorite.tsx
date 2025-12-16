@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { BiHeart, BiSolidHeart } from 'react-icons/bi/index';
 import { AnimatePresence, motion } from 'motion/react';
 
@@ -15,7 +16,7 @@ interface FavoriteProps {
   label: string;
 }
 
-export function Favorite({ id, label }: FavoriteProps) {
+export const Favorite = memo(function Favorite({ id, label }: FavoriteProps) {
   const isFavorite = useSoundStore(state => state.sounds[id].isFavorite);
   const toggleFavorite = useSoundStore(state => state.toggleFavorite);
 
@@ -67,4 +68,4 @@ export function Favorite({ id, label }: FavoriteProps) {
       </button>
     </AnimatePresence>
   );
-}
+});

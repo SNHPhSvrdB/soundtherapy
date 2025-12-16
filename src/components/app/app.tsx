@@ -11,6 +11,7 @@ import { Buttons } from '@/components/buttons';
 import { Categories } from '@/components/categories';
 import { SharedModal } from '@/components/modals/shared';
 import { Toolbar } from '@/components/toolbar';
+import { SnackbarProvider } from '@/contexts/snackbar';
 
 import { MediaControls } from '@/components/media-controls';
 
@@ -29,17 +30,15 @@ export function App() {
   const unlock = useSoundStore(state => state.unlock);
 
   const favoriteSounds = useMemo(() => {
-    const favoriteSounds = categories
-      .map(category => category.sounds)
-      .flat()
-      .filter(sound => favorites.includes(sound.id));
+    // Create a Map for O(1) lookups instead of O(n) with find()
+    const soundMap = new Map(
+      categories.flatMap(category => category.sounds).map(sound => [sound.id, sound])
+    );
 
     /**
-     * Reorder based on the order of favorites
+     * Reorder based on the order of favorites using Map lookup
      */
-    return favorites.map(favorite =>
-      favoriteSounds.find(sound => sound.id === favorite),
-    );
+    return favorites.map(favoriteId => soundMap.get(favoriteId)).filter((sound): sound is Sound => sound !== undefined);
   }, [favorites, categories]);
 
   useEffect(() => {

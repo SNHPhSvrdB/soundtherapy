@@ -57,12 +57,12 @@ export function Sounds({ functional, id, sounds }: SoundsProps) {
     }));
   }, []);
 
-  const toggleMore = () => {
+  const toggleMore = useCallback(() => {
     if (!isAnimating) {
       setShowAll(prev => !prev);
       setClickedMore(true);
     }
-  };
+  }, [isAnimating, setShowAll]);
 
   const variants = mix(fade(), scale(0.9));
 

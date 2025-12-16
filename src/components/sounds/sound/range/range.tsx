@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { useSoundStore } from '@/stores/sound';
 
 import styles from './range.module.css';
@@ -7,7 +8,7 @@ interface RangeProps {
   label: string;
 }
 
-export function Range({ id, label }: RangeProps) {
+export const Range = memo(function Range({ id, label }: RangeProps) {
   const setVolume = useSoundStore(state => state.setVolume);
   const volume = useSoundStore(state => state.sounds[id].volume);
   const isSelected = useSoundStore(state => state.sounds[id].isSelected);
@@ -29,4 +30,4 @@ export function Range({ id, label }: RangeProps) {
       }
     />
   );
-}
+});

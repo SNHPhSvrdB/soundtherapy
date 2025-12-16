@@ -23,36 +23,41 @@ export interface SoundActions {
 
 export const createActions: StateCreator<
   SoundActions & SoundState,
-  [],
+  [['zustand/immer', never]],
   [],
   SoundActions
 > = (set, get) => {
   return {
     lock() {
-      set({ locked: true });
+      set(state => {
+        state.locked = true;
+      });
     },
 
     override(newSounds) {
       get().unselectAll();
 
-      const sounds = get().sounds;
-
-      Object.keys(newSounds).forEach(sound => {
-        if (sounds[sound]) {
-          sounds[sound].isSelected = true;
-          sounds[sound].volume = newSounds[sound];
-        }
+      set(state => {
+        Object.keys(newSounds).forEach(soundId => {
+          if (state.sounds[soundId]) {
+            state.sounds[soundId].isSelected = true;
+            state.sounds[soundId].volume = newSounds[soundId];
+          }
+        });
+        state.history = null;
       });
-
-      set({ history: null, sounds: { ...sounds } });
     },
 
     pause() {
-      set({ isPlaying: false });
+      set(state => {
+        state.isPlaying = false;
+      });
     },
 
     play() {
-      set({ isPlaying: true });
+      set(state => {
+        state.isPlaying = true;
+      });
     },
 
     restoreHistory() {
@@ -60,80 +65,74 @@ export const createActions: StateCreator<
 
       if (!history) return;
 
-      set({ history: null, sounds: history });
+      set(state => {
+        state.history = null;
+        state.sounds = history;
+      });
     },
 
     select(id) {
-      set({
-        history: null,
-        sounds: {
-          ...get().sounds,
-          [id]: { ...get().sounds[id], isSelected: true },
-        },
+      set(state => {
+        state.history = null;
+        state.sounds[id].isSelected = true;
       });
     },
 
     setGlobalVolume(volume) {
-      set({
-        globalVolume: volume,
+      set(state => {
+        state.globalVolume = volume;
       });
     },
 
     setVolume(id, volume) {
-      set({
-        sounds: {
-          ...get().sounds,
-          [id]: { ...get().sounds[id], volume },
-        },
+      set(state => {
+        state.sounds[id].volume = volume;
       });
     },
 
     shuffle() {
-      const sounds = get().sounds;
-      const ids = Object.keys(sounds);
+      set(state => {
+        const ids = Object.keys(state.sounds);
 
-      ids.forEach(id => {
-        sounds[id].isSelected = false;
-        sounds[id].volume = 0.5;
+        ids.forEach(id => {
+          state.sounds[id].isSelected = false;
+          state.sounds[id].volume = 0.5;
+        });
+
+        const randomIDs = pickMany(ids, 4);
+
+        randomIDs.forEach(id => {
+          state.sounds[id].isSelected = true;
+          state.sounds[id].volume = random(0.2, 1);
+        });
+
+        state.history = null;
+        state.isPlaying = true;
       });
-
-      const randomIDs = pickMany(ids, 4);
-
-      randomIDs.forEach(id => {
-        sounds[id].isSelected = true;
-        sounds[id].volume = random(0.2, 1);
-      });
-
-      set({ history: null, isPlaying: true, sounds });
     },
 
     toggleFavorite(id) {
-      const sounds = get().sounds;
-      const sound = sounds[id];
-
-      set({
-        history: null,
-        sounds: {
-          ...sounds,
-          [id]: { ...sound, isFavorite: !sound.isFavorite },
-        },
+      set(state => {
+        state.history = null;
+        state.sounds[id].isFavorite = !state.sounds[id].isFavorite;
       });
     },
 
     togglePlay() {
-      set({ isPlaying: !get().isPlaying });
+      set(state => {
+        state.isPlaying = !state.isPlaying;
+      });
     },
 
     unlock() {
-      set({ locked: false });
+      set(state => {
+        state.locked = false;
+      });
     },
 
     unselect(id) {
-      set({
-        sounds: {
-          ...get().sounds,
-          [id]: { ...get().sounds[id], isSelected: false },
-        },
+      set(state => {
+        state.sounds[id].isSelected = false;
       });
     },
 
@@ -142,21 +141,19 @@ export const createActions: StateCreator<
 
       if (noSelected) return;
 
-      const sounds = get().sounds;
+      set(state => {
+        if (pushToHistory) {
+          // Use structuredClone instead of JSON.parse(JSON.stringify())
+          state.history = structuredClone(state.sounds);
+        }
 
-      if (pushToHistory) {
-        const history = JSON.parse(JSON.stringify(sounds));
-        set({ history });
-      }
+        const ids = Object.keys(state.sounds);
 
-      const ids = Object.keys(sounds);
-
-      ids.forEach(id => {
-        sounds[id].isSelected = false;
-        sounds[id].volume = 0.5;
+        ids.forEach(id => {
+          state.sounds[id].isSelected = false;
+          state.sounds[id].volume = 0.5;
+        });
       });
-
-      set({ sounds });
     },
   };
 };
