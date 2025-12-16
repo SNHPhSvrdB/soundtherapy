@@ -12,9 +12,6 @@ export function Donate() {
         </div>
       </div>
 
-      <div className={styles.title}>
-        <span>Support Me</span>
-      </div>
       <p className={styles.desc}>Ad-free.</p>
       
     </div>
