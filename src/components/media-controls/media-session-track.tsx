@@ -9,7 +9,7 @@ import { useDarkTheme } from '@/hooks/use-dark-theme';
 
 const metadata: MediaMetadataInit = {
   artist: 'Moodist',
-  title: 'Ambient Sounds for Focus and Calm',
+  title: 'Ambient Sounds for Reducing Tinnitus Distress',
 };
 
 export function MediaSessionTrack() {
